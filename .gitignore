@@ -129,9 +129,6 @@ celerybeat.pid
 
 # Environments
 .env
-.env.development
-.env.production
-
 .venv
 env/
 venv/
@@ -175,7 +172,3 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
-
-
-backend/media/profile_images/*
-!backend/media/profile_images/.gitkeep

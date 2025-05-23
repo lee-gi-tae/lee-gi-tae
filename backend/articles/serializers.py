@@ -28,16 +28,22 @@ class CommentSerializer(serializers.ModelSerializer):
 class ArticleListSerializer(serializers.ModelSerializer):
     writer = UserSimpleSerializer(read_only=True)
     comment_count = serializers.IntegerField(source="comments.count", read_only=True)
+    likes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Article
-        fields = ("id", "writer", "title", "created_at", "comment_count")
+        fields = ("id", "writer", "title", "created_at", "comment_count", "likes_count")
+        
+    def get_likes_count(self, obj):
+        return obj.likes.count()
 
 
 class ArticleSerializer(serializers.ModelSerializer):
     writer = UserSimpleSerializer(read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
     comment_count = serializers.IntegerField(source="comments.count", read_only=True)
+    likes = UserSimpleSerializer(many=True, read_only=True)
+    likes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Article
@@ -50,5 +56,10 @@ class ArticleSerializer(serializers.ModelSerializer):
             "updated_at",
             "comments",
             "comment_count",
+            "likes",
+            "likes_count",
         )
         read_only_fields = ("id", "created_at", "updated_at")
+        
+    def get_likes_count(self, obj):
+        return obj.likes.count()

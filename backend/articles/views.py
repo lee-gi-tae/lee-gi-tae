@@ -82,3 +82,29 @@ def comment_detail(request, comment_id):
             {"message": "Comment deleted successfully"},
             status=status.HTTP_204_NO_CONTENT,
         )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def toggle_like(request, article_id):
+    """
+    Toggle like status for an article
+    """
+    article = get_object_or_404(Article, pk=article_id)
+    user = request.user
+    
+    # Check if the user has already liked the article
+    if user in article.likes.all():
+        # Unlike the article
+        article.likes.remove(user)
+        liked = False
+    else:
+        # Like the article
+        article.likes.add(user)
+        liked = True
+    
+    return Response({
+        'article_id': article_id,
+        'likes_count': article.likes_count(),
+        'liked': liked
+    })

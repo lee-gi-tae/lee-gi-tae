@@ -9,4 +9,5 @@ urlpatterns = [
     path("", include(router.urls)),
     path("<int:article_id>/comments/", views.add_comment, name="add_comment"),
     path("comments/<int:comment_id>/", views.comment_detail, name="comment_detail"),
+    path("<int:article_id>/like/", views.toggle_like, name="toggle_like"),
 ]
