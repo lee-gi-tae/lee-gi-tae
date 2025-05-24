@@ -58,24 +58,21 @@
           </div>
 
           <div class="product-join-methods">
-            <JoinMethods :join_way="product.join_way" />
+            <p>가입 방법: {{ product.join_way.join(', ') }}</p>
           </div>
         </div>
 
         <!-- Rate highlight section based on product type -->
         <div class="product-rate-highlight">
           <template v-if="product.product_type === 'deposit' || product.product_type === 'saving'">
-            <RateDisplay
-              :rate="product.max_rate"
-              :type="product.product_type"
-              rateType="max"
-              :highlight="true"
-            />
+            <div class="rate-value">{{ formatRate(product.max_rate || product.intr_rate2) }}%</div>
+            <div class="rate-label">최고 우대금리</div>
             <div class="rate-info">* 최고 우대금리 기준</div>
           </template>
 
           <template v-else-if="product.product_type === 'loan'">
-            <RateDisplay :rate="product.min_rate" type="loan" rateType="min" :highlight="true" />
+            <div class="rate-value loan-rate">{{ formatRate(product.min_rate) }}%</div>
+            <div class="rate-label">최저 금리</div>
             <div class="rate-info">* 최저 금리 기준</div>
           </template>
         </div>
@@ -129,7 +126,11 @@
               <div class="info-item">
                 <div class="info-label">가입 방법</div>
                 <div class="info-value">
-                  <JoinMethods :joinWay="product.join_way" :showLabel="false" />
+                  <div class="join-badges">
+                    <span v-for="way in product.join_way" :key="way" class="join-badge">
+                      {{ way }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -178,77 +179,59 @@
 
         <!-- Rates tab -->
         <div v-if="activeTab === 'rates'" class="tab-panel">
-          <template v-if="product.product_type === 'deposit' || product.product_type === 'saving'">
-            <div class="info-section">
-              <h3 class="section-title">금리 정보</h3>
-
-              <div class="rates-grid">
-                <div class="rate-card">
-                  <div class="rate-card-title">기본금리</div>
-                  <RateDisplay
-                    :rate="product.base_rate"
-                    :type="product.product_type"
-                    rateType="base"
-                  />
+          <!-- Rate Information Section -->
+          <div class="product-info-section">
+            <h3>금리 정보</h3>
+            
+            <!-- Max/Standard Rate Display -->
+            <div class="rate-display">
+              <!-- Max Rate (for savings) or Standard Rate (for loans) -->
+              <div v-if="product.product_type === 'SAVINGS' || product.product_type === 'DEPOSIT'">
+                <div :class="['rate-value', getRateClass(product.product_type, true)]">
+                  {{ formatRate(product.max_rate || product.intr_rate2) }}%
                 </div>
-
-                <div class="rate-card">
-                  <div class="rate-card-title">최고금리</div>
-                  <RateDisplay
-                    :rate="product.max_rate"
-                    :type="product.product_type"
-                    rateType="max"
-                    :highlight="true"
-                  />
-                </div>
+                <div class="rate-label">최고 우대금리</div>
               </div>
-
-              <div class="info-item wide">
-                <div class="info-label">이자 지급 방식</div>
-                <div class="info-value">
-                  {{ getInterestPaymentMethod(product.intr_rate_type_nm) }}
+              <div v-else>
+                <div :class="['rate-value', getRateClass(product.product_type, true)]">
+                  {{ formatRate(product.intr_rate || product.intr_rate2) }}%
                 </div>
+                <div class="rate-label">기준금리</div>
               </div>
-
-              <div class="disclaimer">
-                * 실제 적용금리는 고객의 신용도, 대출기간, 대출금액 등에 따라 달라질 수 있습니다. *
-                금리 우대조건은 은행 홈페이지에서 확인하시기 바랍니다.
+              
+              <!-- Base Rate (for savings) -->
+              <div v-if="product.product_type !== 'LOAN' && (product.intr_rate || product.intr_rate2)">
+                <div :class="['rate-value', getRateClass(product.product_type)]">
+                  {{ formatRate(product.intr_rate || product.intr_rate2) }}%
+                </div>
+                <div class="rate-label">기본금리</div>
+              </div>
+              
+              <!-- Min Rate (for loans) -->
+              <div v-if="product.product_type === 'LOAN' && product.min_rate">
+                <div :class="['rate-value', getRateClass(product.product_type)]">
+                  {{ formatRate(product.min_rate) }}%
+                </div>
+                <div class="rate-label">최저금리</div>
               </div>
             </div>
-          </template>
-
-          <template v-else-if="product.product_type === 'loan'">
-            <div class="info-section">
-              <h3 class="section-title">대출 금리 정보</h3>
-
-              <div class="rates-grid">
-                <div class="rate-card">
-                  <div class="rate-card-title">최저금리</div>
-                  <RateDisplay
-                    :rate="product.min_rate"
-                    type="loan"
-                    rateType="min"
-                    :highlight="true"
-                  />
-                </div>
-
-                <div class="rate-card">
-                  <div class="rate-card-title">최고금리</div>
-                  <RateDisplay :rate="product.max_rate" type="loan" rateType="max" />
-                </div>
+            
+            <!-- Rate Details -->
+            <div class="rate-details">
+              <div v-if="product.intr_rate_type_nm" class="detail-item">
+                <span class="detail-label">금리유형:</span>
+                <span class="detail-value">{{ product.intr_rate_type_nm }}</span>
               </div>
-
-              <div class="info-item wide">
-                <div class="info-label">금리 유형</div>
-                <div class="info-value">{{ getLoanRateType(product.lend_rate_type) }}</div>
+              <div v-if="product.rsrv_type_nm" class="detail-item">
+                <span class="detail-label">적립유형:</span>
+                <span class="detail-value">{{ product.rsrv_type_nm || getSavingType(product) }}</span>
               </div>
-
-              <div class="disclaimer">
-                * 실제 적용금리는 고객의 신용도, 대출기간, 대출금액 등에 따라 달라질 수 있습니다. *
-                대출금리 우대조건은 은행 홈페이지에서 확인하시기 바랍니다.
+              <div v-if="product.product_type === 'SAVINGS'" class="detail-item">
+                <span class="detail-label">저축방식:</span>
+                <span class="detail-value">{{ getSavingType(product) }}</span>
               </div>
             </div>
-          </template>
+          </div>
         </div>
 
         <!-- Conditions tab -->
@@ -376,18 +359,14 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import productsService from '@/services/products'
-import RateDisplay from '@/components/products/RateDisplay.vue'
-import JoinMethods from '@/components/products/JoinMethods.vue'
 import ProductCard from '@/components/products/ProductCard.vue'
 
 export default {
   name: 'ProductDetailView',
   components: {
-    RateDisplay,
-    JoinMethods,
     ProductCard,
   },
   setup() {
@@ -451,9 +430,54 @@ export default {
 
         // Load related products
         loadRelatedProducts()
+
+        console.log('Product details loaded:', product.value)
       } catch (err) {
         console.error('Error loading product details:', err)
         error.value = '상품 정보를 불러오는데 실패했습니다. 다시 시도해주세요.'
+      } finally {
+        loading.value = false
+      }
+    }
+
+    // Fetch product by id with enhanced data
+    const fetchProduct = async (id) => {
+      loading.value = true
+      error.value = null
+      
+      try {
+        // First try the generic endpoint to get basic info
+        const basicProduct = await productsService.getFinancialProduct(id)
+        
+        product.value = basicProduct
+        
+        // Then try to get more detailed info based on product type
+        if (basicProduct && basicProduct.product_type) {
+          try {
+            const detailedProduct = await productsService.getProductByTypeAndId(
+              basicProduct.product_type, 
+              id
+            )
+            
+            // Merge the detailed product data with the basic product data
+            product.value = {
+              ...basicProduct,
+              ...detailedProduct
+            }
+            
+            // Log the final product object for debugging
+            console.log('Final product object:', product.value)
+            
+            // After loading product data, check favorites and load related products
+            checkIfFavorite()
+            loadRelatedProducts()
+          } catch (detailError) {
+            console.warn('Could not fetch detailed product info:', detailError)
+          }
+        }
+      } catch (err) {
+        error.value = '상품 정보를 불러오는데 실패했습니다. 다시 시도해주세요.'
+        console.error('Error loading product:', err)
       } finally {
         loading.value = false
       }
@@ -544,7 +568,15 @@ export default {
     // Format interest rate for display
     const formatRate = (rate) => {
       if (!rate) return '0.00'
-      return parseFloat(rate).toFixed(2)
+      
+      // Handle potential string or number inputs
+      const numRate = typeof rate === 'string' ? parseFloat(rate) : rate
+      
+      // Check if conversion resulted in a valid number
+      if (isNaN(numRate)) return '0.00'
+      
+      // Format with 2 decimal places
+      return numRate.toFixed(2)
     }
 
     // Format date (YYYYMMDD to YYYY-MM-DD)
@@ -571,7 +603,7 @@ export default {
       if (!product.value || !product.value.join_way) return false
       return product.value.join_way.includes(code)
     }
-    
+
     // Get product type name for display
     const getProductTypeName = (type) => {
       const types = {
@@ -592,11 +624,36 @@ export default {
       return method
     }
 
-    // Get saving type name
-    const getSavingType = (saving) => {
-      console.log(saving)
-      // Implementation would depend on what data is available
-      // This is a placeholder
+    // Get the savings type based on product data
+    const getSavingType = (product) => {
+      if (!product) return '정보 없음'
+      
+      // First check if rsrv_type_nm is available (best source)
+      if (product.rsrv_type_nm) {
+        return product.rsrv_type_nm
+      }
+      
+      // Then check for rsrv_type
+      if (product.rsrv_type) {
+        if (product.rsrv_type === 1) return '자유적립식'
+        if (product.rsrv_type === 2) return '정액적립식'
+        if (typeof product.rsrv_type === 'string') return product.rsrv_type
+        return `적립 유형: ${product.rsrv_type}`
+      }
+      
+      // Next check based on product name patterns
+      const name = product.fin_prdt_nm?.toLowerCase() || ''
+      if (name.includes('자유')) return '자유적립식'
+      if (name.includes('정액')) return '정액적립식'
+      if (name.includes('정기')) return '정기적금'
+      
+      // Check based on etc_note if available
+      const description = product.etc_note?.toLowerCase() || ''
+      if (description.includes('자유적립')) return '자유적립식'
+      if (description.includes('정액적립')) return '정액적립식'
+      
+      // Default fallback
+      if (product.product_type === 'DEPOSIT') return '정기예금'
       return '정기적금'
     }
 
@@ -643,9 +700,27 @@ export default {
 
     // Get bank logo
     const getBankLogo = (bankName) => {
-      // This would be replaced with actual bank logo logic
-      // For now, return a placeholder
-      return `https://via.placeholder.com/50?text=${encodeURIComponent(bankName.charAt(0))}`
+      const banks = [
+        'SC제일은행',
+        '광주은행',
+        '국민은행',
+        '기업은행',
+        '농협',
+        '대구은행',
+        '부산은행',
+        '새마을금고',
+        '수협은행',
+        '신한은행',
+        '신협',
+        '씨티뱅크',
+        '우리은행',
+        '하나은행',
+      ]
+      // bankName이 배열에 포함되는 은행명을 포함하면 해당 은행명으로 bankName을 변경
+      const matched = banks.find((b) => bankName.includes(b))
+      if (matched) bankName = matched
+
+      return new URL(`/src/assets/${bankName}.png`, import.meta.url).href
     }
 
     // Visit bank website
@@ -663,7 +738,6 @@ export default {
         산업은행: 'https://www.kdb.co.kr',
         새마을금고: 'https://www.kfcc.co.kr',
         수협은행: 'https://www.suhyup-bank.com',
-        카카오뱅크: 'https://www.kakaobank.com',
         토스뱅크: 'https://www.tossbank.com',
         케이뱅크: 'https://www.kbanknow.com',
       }
@@ -695,9 +769,40 @@ export default {
       }
     }
 
+    // Determine rate CSS class based on product type
+    const getRateClass = (type, highlight = false) => {
+      const classes = []
+      
+      // Add highlight class if needed
+      if (highlight) classes.push('highlight')
+      
+      // Add type-specific class
+      if (type === 'LOAN' || type === 'loan') {
+        classes.push('loan-rate')
+      } else {
+        classes.push('savings-rate')
+      }
+      
+      return classes.join(' ')
+    }
+
     // Load data on component mount
     onMounted(() => {
-      loadProductDetails()
+      // Get the product id from the route parameters
+      const id = route.params.id
+      
+      if (id) {
+        fetchProduct(id)
+      } else {
+        loadProductDetails()
+      }
+    })
+    
+    // Watch for product changes to log rate fields
+    watch(product, (newVal) => {
+      if (newVal) {
+        logRateFields(newVal)
+      }
     })
 
     return {
@@ -725,6 +830,8 @@ export default {
       isProductInFavorites,
       toggleRelatedFavorite,
       loadProductDetails,
+      getRateClass,
+      logRateFields,
     }
   },
 }
@@ -732,34 +839,28 @@ export default {
 
 <style scoped>
 .product-detail-container {
-  max-width: 1100px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 2.5rem 1.5rem;
-  font-family: var(--font-body);
-  color: var(--color-text);
-  background: linear-gradient(135deg, var(--color-background-start) 0%, var(--color-background-end) 100%);
-  min-height: calc(100vh - 160px);
+  padding: 1.5rem 1rem;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: #333;
 }
 
 /* Loading animation */
 .loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  text-align: center;
   padding: 5rem 0;
-  color: var(--color-text);
 }
 
 .loading-spinner {
   display: inline-block;
-  width: 60px;
-  height: 60px;
-  border: 3px solid rgba(0, 0, 0, 0.1);
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(75, 85, 99, 0.1);
   border-radius: 50%;
-  border-top-color: var(--color-primary);
+  border-top-color: #3b82f6;
   animation: spin 1s ease-in-out infinite;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 @keyframes spin {
@@ -771,352 +872,319 @@ export default {
 /* Error container */
 .error-container {
   text-align: center;
-  padding: 4rem 2.5rem;
-  background: rgba(214, 48, 49, 0.05);
-  border-radius: 12px;
-  box-shadow: var(--shadow-md);
-  color: var(--color-error);
-  margin: 2rem auto;
-  max-width: 600px;
+  padding: 4rem 2rem;
+  background: #fef2f2;
+  border-radius: 10px;
+  color: #b91c1c;
 }
 
 .error-icon {
-  font-size: 3rem;
-  margin-bottom: 1.5rem;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
 }
 
 .retry-button {
-  margin-top: 2rem;
-  padding: 0.75rem 2rem;
-  background: var(--color-primary);
-  color: var(--color-white);
+  margin-top: 1.5rem;
+  padding: 0.5rem 1.5rem;
+  background: #ef4444;
+  color: white;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-family: var(--font-body);
-  font-size: var(--font-size-base);
+  border-radius: 6px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-normal);
-  position: relative;
-  overflow: hidden;
-}
-
-.retry-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  transition: left 0.6s;
+  transition: background 0.2s;
 }
 
 .retry-button:hover {
-  background: var(--color-primary-dark);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+  background: #dc2626;
 }
 
-.retry-button:hover::before {
-  left: 100%;
-}
-
-.retry-button:active {
-  transform: translateY(-1px);
-}
-
-/* Header navigation */
+/* Page header */
 .page-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 2rem;
   align-items: center;
+  margin-bottom: 1.5rem;
 }
 
 .back-button {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  color: var(--color-text);
-  background: var(--color-white);
-  border: 1px solid var(--color-secondary);
-  padding: 0.6rem 1.2rem;
-  border-radius: 50px;
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  font-family: var(--font-body);
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #4b5563;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all var(--transition-normal);
-  box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
 }
 
 .back-button:hover {
-  background: var(--color-secondary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  background: #e5e7eb;
 }
 
 .header-actions {
   display: flex;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .share-button,
 .favorite-button {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  background: var(--color-white);
-  border: 1px solid var(--color-secondary);
-  border-radius: 50px;
-  padding: 0.6rem 1.2rem;
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  font-family: var(--font-body);
-  color: var(--color-text);
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #4b5563;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all var(--transition-normal);
-  box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
 }
 
-.share-button:hover,
-.favorite-button:hover {
-  background: var(--color-secondary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+.share-button:hover {
+  background: #f9fafb;
 }
 
 .favorite-button.is-favorite {
-  background: rgba(var(--color-primary-rgb), 0.1);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  background: #fffbeb;
+  border-color: #fbbf24;
+  color: #d97706;
+}
+
+.favorite-button:hover {
+  background: #f9fafb;
 }
 
 .favorite-button.is-favorite:hover {
-  background: rgba(var(--color-primary-rgb), 0.15);
+  background: #fef3c7;
 }
 
 /* Product header card */
 .product-header-card {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 2.5rem;
-  padding: 2.5rem;
-  background: var(--color-white);
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg);
-  margin-bottom: 2.5rem;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 10px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.06);
+  margin-bottom: 1.5rem;
   align-items: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.product-header-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 5px;
-  background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
 }
 
 .product-bank-logo {
-  width: 75px;
-  height: 75px;
+  width: 60px;
+  height: 60px;
+  background: #f3f4f6;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-white);
-  border-radius: 50%;
   overflow: hidden;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--color-secondary);
-  padding: 0.5rem;
 }
 
 .product-bank-logo img {
-  max-width: 90%;
-  max-height: 90%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
 }
 
 .product-main-info {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.5rem;
 }
 
 .product-badges {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-bottom: 0.25rem;
 }
 
 .product-type-badge {
-  display: inline-block;
-  padding: 0.35rem 0.75rem;
-  font-size: var(--font-size-xs);
-  border-radius: 50px;
-  background: var(--color-secondary);
-  color: var(--color-text);
+  font-size: 0.8rem;
   font-weight: 500;
-  letter-spacing: 0.5px;
+  padding: 0.25rem 0.75rem;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 20px;
 }
 
 .new-badge {
-  display: inline-block;
-  padding: 0.35rem 0.75rem;
-  font-size: var(--font-size-xs);
-  border-radius: 50px;
-  background: rgba(var(--color-accent-rgb), 0.1);
-  color: var(--color-accent);
+  font-size: 0.8rem;
   font-weight: 500;
-  letter-spacing: 0.5px;
+  padding: 0.25rem 0.75rem;
+  background: #ecfdf5;
+  color: #047857;
+  border-radius: 20px;
 }
 
 .product-name {
-  margin: 0;
-  font-size: var(--font-size-2xl);
+  font-size: 1.5rem;
   font-weight: 700;
-  line-height: 1.3;
-  color: var(--color-accent);
-  font-family: var(--font-heading);
+  margin: 0;
+  color: #111827;
 }
 
 .product-bank {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-light);
+  gap: 1rem;
+  color: #4b5563;
+  font-size: 0.95rem;
 }
 
 .visit-bank-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.75rem;
-  font-size: var(--font-size-xs);
-  color: var(--color-text);
-  background: var(--color-secondary);
+  font-size: 0.85rem;
+  color: #2563eb;
+  background: none;
   border: none;
-  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   cursor: pointer;
-  transition: all var(--transition-normal);
+  padding: 0;
 }
 
 .visit-bank-button:hover {
-  background: var(--color-secondary-dark);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  text-decoration: underline;
 }
 
 .product-join-methods {
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
 }
 
 .product-rate-highlight {
-  text-align: center;
-  padding: 1.5rem;
-  background: rgba(var(--color-primary-rgb), 0.05);
-  border-radius: 12px;
-  border-left: 4px solid var(--color-primary);
-  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  min-width: 150px;
 }
 
-.rate-info {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-light);
-  margin-top: 0.75rem;
+.rate-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.rate-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  line-height: 1;
+  margin-bottom: 5px;
+  transition: color 0.3s ease;
+}
+
+.rate-value.savings-rate {
+  color: #4caf50;
+}
+
+.rate-value.loan-rate {
+  color: #2196f3;
+}
+
+.rate-value.highlight {
+  font-size: 2.2rem;
+  color: #ff5722;
+}
+
+.rate-label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.rate-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.detail-item {
+  display: flex;
+  gap: 10px;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #666;
+  min-width: 80px;
+}
+
+.detail-value {
+  color: #333;
 }
 
 /* Tabs */
 .product-tabs {
   display: flex;
-  gap: 0.5rem;
-  border-bottom: 2px solid var(--color-secondary);
-  margin-bottom: 2.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
 }
 
 .tab-button {
-  padding: 1rem 1.75rem;
-  border: none;
+  padding: 0.75rem 1.25rem;
   background: none;
-  font-size: var(--font-size-base);
-  font-family: var(--font-body);
-  font-weight: 500;
-  color: var(--color-text-light);
-  cursor: pointer;
+  border: none;
   border-bottom: 2px solid transparent;
-  transition: all var(--transition-normal);
-  margin-bottom: -2px;
-}
-
-.tab-button:hover {
-  color: var(--color-text);
+  color: #6b7280;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .tab-button.active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-  font-weight: 600;
+  color: #2563eb;
+  border-bottom-color: #2563eb;
 }
 
-/* Tab content styles */
+.tab-button:hover:not(.active) {
+  color: #374151;
+  background: #f9fafb;
+}
+
+/* Tab content */
 .tab-panel {
-  margin-bottom: 2.5rem;
-  animation: fadeIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  padding: 1rem 0;
 }
 
 .info-section {
-  margin-bottom: 2.5rem;
-  background: var(--color-white);
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: var(--shadow-md);
+  margin-bottom: 2rem;
 }
 
 .section-title {
-  margin: 0 0 1.5rem 0;
-  font-size: var(--font-size-lg);
-  color: var(--color-accent);
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--color-secondary);
-  font-family: var(--font-heading);
-  position: relative;
-}
-
-.section-title::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 60px;
-  height: 3px;
-  background: var(--color-primary);
-  border-radius: 3px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  color: #111827;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f3f4f6;
 }
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
 }
 
 .info-item {
-  margin-bottom: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .info-item.wide {
@@ -1124,162 +1192,127 @@ export default {
 }
 
 .info-label {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-light);
-  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  color: #6b7280;
 }
 
 .info-value {
-  font-size: var(--font-size-base);
-  color: var(--color-text);
-  font-weight: 500;
+  font-size: 1rem;
+  color: #111827;
 }
 
 .product-description {
-  line-height: 1.7;
-  color: var(--color-text);
+  line-height: 1.6;
+  color: #374151;
   white-space: pre-line;
-  font-size: var(--font-size-base);
 }
 
 .disclaimer {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-light);
-  margin-top: 1.75rem;
-  padding: 1.2rem;
-  background: var(--color-secondary);
-  border-radius: 8px;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-left: 3px solid #d1d5db;
+  font-size: 0.85rem;
+  color: #6b7280;
   line-height: 1.6;
   white-space: pre-line;
 }
 
-/* Rates tab styles */
+/* Rate cards */
 .rates-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1.75rem;
-  margin-bottom: 1.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .rate-card {
-  padding: 1.75rem;
-  background: var(--color-white);
-  border-radius: 12px;
+  padding: 1.25rem;
+  background: #f9fafb;
+  border-radius: 8px;
   text-align: center;
-  box-shadow: var(--shadow-md);
-  transition: all var(--transition-normal);
-  border: 1px solid var(--color-secondary);
-}
-
-.rate-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
 }
 
 .rate-card-title {
+  font-size: 0.9rem;
+  color: #6b7280;
   margin-bottom: 0.75rem;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-light);
-  font-weight: 500;
 }
 
-/* Conditions tab styles */
+/* Join method cards for conditions tab */
 .join-methods-detailed {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .join-method-item {
   display: flex;
-  gap: 1.25rem;
-  padding: 1.75rem;
-  background: var(--color-white);
-  border-radius: 12px;
-  box-shadow: var(--shadow-md);
-  align-items: center;
-  transition: all var(--transition-normal);
-  border: 1px solid var(--color-secondary);
-}
-
-.join-method-item:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: #f9fafb;
+  border-radius: 8px;
 }
 
 .join-method-icon {
-  width: 3.5rem;
-  height: 3.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-secondary);
+  width: 50px;
+  height: 50px;
+  background: #e0f2fe;
+  color: #0284c7;
   border-radius: 50%;
-  color: var(--color-text);
-  font-size: 1.35rem;
-  transition: all var(--transition-normal);
-}
-
-.join-method-item:hover .join-method-icon {
-  background: var(--color-primary);
-  color: var(--color-white);
-  transform: scale(1.1);
+  font-size: 1.25rem;
 }
 
 .join-method-content h4 {
-  margin: 0 0 0.6rem 0;
-  color: var(--color-accent);
-  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #111827;
 }
 
 .join-method-content p {
   margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
+  color: #4b5563;
   line-height: 1.5;
 }
 
-/* Conditions tab styles */
+/* Condition items */
 .conditions-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.75rem;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
 .condition-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  background: var(--color-secondary);
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f3f4f6;
   border-radius: 8px;
-  transition: all var(--transition-normal);
-}
-
-.condition-item:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
-  background: var(--color-white);
 }
 
 .condition-item i {
-  color: var(--color-primary);
-  font-size: 1.2rem;
+  color: #10b981;
+  font-size: 1.1rem;
 }
 
 .requirement-note {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-light);
-  margin-top: 1.25rem;
-  font-style: italic;
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-top: 1rem;
 }
 
 /* CTA section */
 .cta-section {
   display: flex;
-  gap: 1.5rem;
-  margin: 3.5rem 0;
+  gap: 1rem;
+  margin: 2rem 0;
 }
 
 .cta-button {
@@ -1287,173 +1320,57 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 1.2rem 1.5rem;
-  border-radius: 12px;
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  font-family: var(--font-body);
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all var(--transition-normal);
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.cta-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  transition: left 0.6s;
+  transition: all 0.2s;
 }
 
 .cta-button.primary {
-  background: var(--color-primary);
-  color: var(--color-white);
+  background: #2563eb;
+  color: white;
   border: none;
-  box-shadow: var(--shadow-md);
 }
 
 .cta-button.primary:hover {
-  background: var(--color-primary-dark);
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
-}
-
-.cta-button:hover::before {
-  left: 100%;
+  background: #1d4ed8;
 }
 
 .cta-button.secondary {
-  background: var(--color-white);
-  color: var(--color-text);
-  border: 1px solid var(--color-secondary);
-  box-shadow: var(--shadow-sm);
+  background: white;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
 }
 
 .cta-button.secondary:hover {
-  background: var(--color-secondary);
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-md);
+  background: #f9fafb;
 }
 
 /* Related products */
 .related-products {
-  margin-top: 3.5rem;
-  padding: 2.5rem;
-  background: var(--color-white);
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg);
-}
-
-.related-products .section-title {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.related-products .section-title::after {
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
 }
 
 .related-products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
 }
 
-/* Dark mode styles */
-:global(.dark-mode) .product-header-card,
-:global(.dark-mode) .info-section,
-:global(.dark-mode) .rate-card,
-:global(.dark-mode) .join-method-item,
-:global(.dark-mode) .related-products {
-  background-color: #2D2D2D;
-}
-
-:global(.dark-mode) .back-button,
-:global(.dark-mode) .share-button,
-:global(.dark-mode) .favorite-button,
-:global(.dark-mode) .cta-button.secondary {
-  background-color: #333333;
-  border-color: #444444;
-}
-
-:global(.dark-mode) .back-button:hover,
-:global(.dark-mode) .share-button:hover,
-:global(.dark-mode) .favorite-button:hover,
-:global(.dark-mode) .cta-button.secondary:hover {
-  background-color: #3D3D3D;
-}
-
-:global(.dark-mode) .product-bank-logo,
-:global(.dark-mode) .condition-item:hover {
-  background-color: #333333;
-}
-
-:global(.dark-mode) .condition-item,
-:global(.dark-mode) .join-method-icon,
-:global(.dark-mode) .disclaimer {
-  background-color: #333333;
-}
-
-/* Responsive styles */
-@media (max-width: 1024px) {
-  .product-header-card {
-    grid-template-columns: auto 1fr;
-    gap: 2rem;
-  }
-  
-  .product-rate-highlight {
-    grid-column: span 2;
-    margin-top: 1.5rem;
-  }
-}
-
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .product-detail-container {
-    padding: 1.5rem 1rem;
-  }
-  
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .header-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
   .product-header-card {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
-    padding: 1.5rem;
+    gap: 1rem;
   }
 
   .product-bank-logo {
-    margin: 0 auto;
-  }
-
-  .product-main-info {
-    text-align: center;
-  }
-
-  .product-bank {
-    flex-direction: column;
-    gap: 0.75rem;
-    align-items: center;
+    justify-self: center;
   }
 
   .product-rate-highlight {
@@ -1461,14 +1378,8 @@ export default {
     width: 100%;
   }
 
-  .product-tabs {
-    overflow-x: auto;
-    padding-bottom: 5px;
-  }
-  
-  .tab-button {
-    padding: 0.75rem 1.25rem;
-    white-space: nowrap;
+  .cta-section {
+    flex-direction: column;
   }
 
   .info-grid {
@@ -1476,22 +1387,6 @@ export default {
   }
 
   .rates-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .cta-section {
-    flex-direction: column;
-  }
-
-  .join-methods-detailed {
-    grid-template-columns: 1fr;
-  }
-  
-  .related-products {
-    padding: 1.5rem;
-  }
-  
-  .related-products-grid {
     grid-template-columns: 1fr;
   }
 }
