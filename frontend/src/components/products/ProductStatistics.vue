@@ -27,7 +27,9 @@
       <!-- Add more stats as available and needed -->
       <div v-if="statistics.average_deposit_rate" class="stat-item">
         <span class="stat-label">{{ $t('products.statistics.avgDepositRate') }}:</span>
-        <span class="stat-value">{{ parseFloat(statistics.average_deposit_rate).toFixed(2) }}%</span>
+        <span class="stat-value"
+          >{{ parseFloat(statistics.average_deposit_rate).toFixed(2) }}%</span
+        >
       </div>
       <div v-if="statistics.average_saving_rate" class="stat-item">
         <span class="stat-label">{{ $t('products.statistics.avgSavingRate') }}:</span>
@@ -41,31 +43,31 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
-import productService from '@/services/products.js';
+import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import productService from '@/services/products.js'
 
-const { t } = useI18n();
-const statistics = ref(null);
-const isLoading = ref(true);
-const error = ref(null);
+const { t } = useI18n()
+const statistics = ref(null)
+const isLoading = ref(true)
+const error = ref(null)
 
 onMounted(async () => {
   try {
-    isLoading.value = true;
-    error.value = null;
-    const response = await productService.getProductStatistics();
-    statistics.value = response.data; // Adjust based on your API response structure
+    isLoading.value = true
+    error.value = null
+    const response = await productService.getProductStatistics()
+    statistics.value = response.data // Adjust based on your API response structure
   } catch (err) {
-    console.error('Error fetching product statistics:', err);
-    error.value = 'Failed to load product statistics. Please try again later.';
+    console.error('Error fetching product statistics:', err)
+    error.value = 'Failed to load product statistics. Please try again later.'
     if (err.response && err.response.data && err.response.data.detail) {
-      error.value = err.response.data.detail;
+      error.value = err.response.data.detail
     }
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-});
+})
 </script>
 
 <style scoped>
@@ -73,7 +75,7 @@ onMounted(async () => {
   padding: 20px;
   background-color: #f0f4f8;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .product-statistics h2 {
@@ -83,7 +85,8 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 
-.loading, .no-data {
+.loading,
+.no-data {
   text-align: center;
   color: #666;
   padding: 20px;

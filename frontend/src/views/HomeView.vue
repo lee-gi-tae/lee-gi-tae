@@ -510,7 +510,7 @@ h1 {
   font-family: 'Playfair Display', serif;
   font-size: 3.5rem;
   margin-bottom: 20px;
-  color: #F7F7F7;
+  color: #f7f7f7;
   text-shadow: var(--hero-text-shadow);
   line-height: 1.2;
 }
@@ -520,14 +520,14 @@ h1 {
   font-size: 1.5rem;
   margin-bottom: 40px;
   opacity: 0.95;
-  color: #F7F7F7;
+  color: #f7f7f7;
   line-height: 1.4;
 }
 
 .user-greeting {
   margin: 40px 0;
   font-size: 1.2rem;
-  color: #F7F7F7;
+  color: #f7f7f7;
 }
 
 .hero-links {
@@ -536,7 +536,7 @@ h1 {
 
 .learn-more-link {
   display: inline-block;
-  color: #F7F7F7;
+  color: #f7f7f7;
   text-decoration: none;
   font-size: 1.1rem;
   opacity: 0.9;
@@ -642,7 +642,7 @@ h1 {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3));
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.3));
   z-index: 1;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -857,15 +857,15 @@ h1 {
   .financial-charts {
     grid-template-columns: 1fr;
   }
-  
+
   .product-cards {
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   }
-  
+
   h1 {
     font-size: 2.5rem;
   }
-  
+
   .subtitle {
     font-size: 1.4rem;
   }
@@ -875,12 +875,12 @@ h1 {
   .product-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .tabs {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .tabs button {
     width: 100%;
     max-width: 300px;

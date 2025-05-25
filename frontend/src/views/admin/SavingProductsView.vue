@@ -205,7 +205,9 @@
 
     <!-- Create Product Button -->
     <div class="create-product">
-      <button @click="createNewProduct" class="btn btn-success">{{ $t('products.admin.createNew') }}</button>
+      <button @click="createNewProduct" class="btn btn-success">
+        {{ $t('products.admin.createNew') }}
+      </button>
     </div>
   </div>
 </template>

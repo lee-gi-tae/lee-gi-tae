@@ -9,7 +9,9 @@
           <router-link to="/articles" class="nav-link">{{ $t('header.community') }}</router-link>
           <router-link to="/map" class="nav-link">{{ $t('header.map') }}</router-link>
           <router-link to="/youtube/search" class="nav-link">{{ $t('header.videos') }}</router-link>
-          <router-link v-if="isAdmin" to="/admin" class="nav-link">{{ $t('header.admin') }}</router-link>
+          <router-link v-if="isAdmin" to="/admin" class="nav-link">{{
+            $t('header.admin')
+          }}</router-link>
         </nav>
 
         <div class="user-menu">
@@ -47,7 +49,9 @@
           <template v-else>
             <div class="auth-buttons">
               <router-link to="/login" class="auth-btn login">{{ $t('common.login') }}</router-link>
-              <router-link to="/register" class="auth-btn register">{{ $t('common.register') }}</router-link>
+              <router-link to="/register" class="auth-btn register">{{
+                $t('common.register')
+              }}</router-link>
             </div>
             <router-link to="/settings" class="settings-link">
               <i class="icon">⚙️</i>
@@ -59,17 +63,25 @@
 
     <main>
       <div class="floating-controls">
-        <button @click="toggleDarkMode" class="floating-btn" :title="isDarkMode ? $t('common.lightMode') : $t('common.darkMode')">
+        <button
+          @click="toggleDarkMode"
+          class="floating-btn"
+          :title="isDarkMode ? $t('common.lightMode') : $t('common.darkMode')"
+        >
           <font-awesome-icon :icon="isDarkMode ? 'sun' : 'moon'" />
         </button>
-        <button @click="toggleLanguage" class="floating-btn" :title="currentLocale === 'ko' ? 'English' : '한국어'">
+        <button
+          @click="toggleLanguage"
+          class="floating-btn"
+          :title="currentLocale === 'ko' ? 'English' : '한국어'"
+        >
           <font-awesome-icon icon="globe" />
           <span>{{ currentLocale === 'ko' ? 'EN' : 'KR' }}</span>
         </button>
       </div>
 
       <PhishingModal />
-      
+
       <!-- 히어로 섹션과 금융 시장 동향은 메인 페이지에서만 표시 -->
       <template v-if="$route.path === '/'">
         <div class="hero-section">
@@ -106,11 +118,11 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 금융 시장 동향 섹션 -->
         <MarketSection />
       </template>
-      
+
       <router-view />
     </main>
 
@@ -188,7 +200,7 @@ const toggleLanguage = () => {
 onMounted(() => {
   // 초기 테마 설정
   settingsStore.initTheme()
-  
+
   // 초기 언어 설정
   settingsStore.initLanguage()
 
@@ -214,7 +226,9 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  transition: background-color var(--transition-speed), color var(--transition-speed);
+  transition:
+    background-color var(--transition-speed),
+    color var(--transition-speed);
 }
 
 body {
@@ -233,7 +247,12 @@ body {
   background-color: var(--background-primary);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Playfair Display', serif;
 }
 
@@ -321,7 +340,9 @@ main {
   box-shadow: var(--card-shadow);
   overflow: hidden;
   border: 1px solid var(--card-border);
-  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+  transition:
+    transform var(--transition-speed),
+    box-shadow var(--transition-speed);
 }
 
 .hero-card:hover {
@@ -429,26 +450,26 @@ main {
     flex-direction: column;
     gap: 3rem;
   }
-  
+
   .hero-content {
     text-align: center;
     padding: 0;
   }
-  
+
   .hero-content h1 {
     font-size: 3.5rem;
   }
-  
+
   .hero-content p {
     font-size: 1.25rem;
     margin-left: auto;
     margin-right: auto;
   }
-  
+
   .hero-buttons {
     justify-content: center;
   }
-  
+
   .hero-card {
     width: 100%;
     max-width: 500px;
@@ -460,22 +481,22 @@ main {
     height: auto;
     padding: 6rem 1rem;
   }
-  
+
   .hero-content h1 {
     font-size: 2.8rem;
   }
-  
+
   .hero-content p {
     font-size: 1.1rem;
   }
-  
+
   .hero-buttons {
     flex-direction: column;
     gap: 0.8rem;
     max-width: 300px;
     margin: 0 auto;
   }
-  
+
   .hero-btn {
     width: 100%;
     padding: 0.9rem 1.5rem;
@@ -533,7 +554,8 @@ main {
   gap: 15px;
 }
 
-.theme-toggle, .language-toggle {
+.theme-toggle,
+.language-toggle {
   background: none;
   border: none;
   color: var(--text-secondary);
@@ -549,7 +571,8 @@ main {
   transition: all 0.2s;
 }
 
-.theme-toggle:hover, .language-toggle:hover {
+.theme-toggle:hover,
+.language-toggle:hover {
   background-color: rgba(79, 70, 229, 0.1);
   color: var(--accent-color);
 }

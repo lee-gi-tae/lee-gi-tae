@@ -1,14 +1,18 @@
 <template>
   <div>
     <!-- 플로팅 버튼 - 페이지 하단에 고정 -->
-    <button @click="togglePhishingModal" class="phishing-button" :class="{ 'dark': isDarkMode }">
+    <button @click="togglePhishingModal" class="phishing-button" :class="{ dark: isDarkMode }">
       <span class="icon">⚠️</span>
       <span class="text">{{ $t('phishing.title') }}</span>
     </button>
-    
+
     <!-- 피싱 경고 모달 - 하단에 표시 -->
-    <div v-if="showPhishingModal" class="phishing-modal phishing-modal-bottom" @keyup.esc="closePhishingModal">
-      <div class="phishing-modal-content" :class="{ 'dark': isDarkMode }">
+    <div
+      v-if="showPhishingModal"
+      class="phishing-modal phishing-modal-bottom"
+      @keyup.esc="closePhishingModal"
+    >
+      <div class="phishing-modal-content" :class="{ dark: isDarkMode }">
         <button class="close-button" @click="closePhishingModal">&times;</button>
         <h3>⚠️ {{ $t('phishing.title') }}</h3>
         <p>📢 {{ $t('phishing.content') }}</p>
@@ -43,7 +47,7 @@ onMounted(() => {
   // 저장된 설정 확인
   const lastShown = localStorage.getItem('phishingModalLastShown')
   const today = new Date().toDateString()
-  
+
   // 오늘 하루 보지 않기를 선택했는지 확인
   if (lastShown === today) {
     showPhishingModal.value = false
@@ -54,7 +58,7 @@ onMounted(() => {
 
   // ESC 키 이벤트 등록
   document.addEventListener('keydown', handleKeyDown)
-  
+
   // 언어 변경 이벤트 리스너 추가
   window.addEventListener('languageChanged', updateModalContent)
 })
@@ -237,11 +241,11 @@ onBeforeUnmount(() => {
     flex-direction: column;
     gap: 15px;
   }
-  
+
   .btn-primary {
     width: 100%;
   }
-  
+
   .phishing-button {
     bottom: 20px;
     right: 20px;
