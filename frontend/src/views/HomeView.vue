@@ -22,20 +22,6 @@
     </div>
 
     <!-- 금융 시장 동향 섹션 -->
-    <section class="main-market-overview-section bg-gray-900 py-12 md:py-16">
-      <div class="container mx-auto px-4">
-        <div class="text-center mb-8 md:mb-12">
-          <h2 class="text-3xl md:text-4xl font-bold text-white leading-tight">
-            <i class="fas fa-chart-line mr-3 text-blue-400"></i>{{ $t('home.marketOverviewTitle') }}
-          </h2>
-          <p class="text-lg md:text-xl text-gray-400 mt-2">
-            {{ $t('home.marketOverviewSubtitle') }}
-          </p>
-        </div>
-        <MainMarketChart />
-      </div>
-    </section>
-
     <MarketSection />
 
     <!-- 주식 관련 영상 검색 섹션 (신규 추가) -->
@@ -118,7 +104,7 @@
               <span v-if="hasJoinWay(product, '스마트폰')" class="join-badge-home">스마트폰</span>
             </div>
             <button @click.stop="viewProductDetails(product)" class="action-btn product-details-btn">
-              {{ $t('common.viewDetails') }}
+              {{ $t('자세히 보기') }}
             </button>
           </div>
         </div>
@@ -143,7 +129,6 @@ import productsService from '@/services/products'
 import { formatRate } from '@/utils/rateUtils'
 import MarketSection from '@/components/market/MarketSection.vue'
 import ParticleNetwork from '@/components/effects/ParticleNetwork.vue'
-import MainMarketChart from '@/components/market/MainMarketChart.vue'
 
 // const userStore = useUserStore()
 const router = useRouter()

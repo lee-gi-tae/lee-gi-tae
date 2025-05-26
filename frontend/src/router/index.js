@@ -142,6 +142,13 @@ const routes = [
     meta: { requiresAuth: false },
   },
   {
+    path: '/stocks/:symbol',
+    name: 'StockDetail',
+    component: () => import('@/views/stocks/StockDetailView.vue'),
+    meta: { requiresAuth: false },
+    props: true,
+  },
+  {
     path: '/admin',
     name: 'Admin',
     component: () => import('@/views/admin/AdminDashboardView.vue'),
@@ -170,18 +177,6 @@ const routes = [
     name: 'AdminLoanProducts',
     component: () => import('@/views/admin/LoanProductsView.vue'),
     meta: { requiresAdmin: true },
-  },
-  {
-    path: '/dashboard',
-    name: 'StockDashboard',
-    component: () => import('@/views/StockDashboard.vue'),
-    meta: { requiresAuth: false }, // Example: No auth needed for now
-  },
-  {
-    path: '/split-info',
-    name: 'StockSplitInfo',
-    component: () => import('@/views/StockSplitInfo.vue'),
-    meta: { requiresAuth: false },
   },
   {
     path: '/:pathMatch(.*)*',

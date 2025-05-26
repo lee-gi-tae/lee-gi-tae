@@ -14,7 +14,11 @@ from pathlib import Path
 import os
 import environ
 
+from dotenv import load_dotenv
 
+load_dotenv()  # .env 파일 로드
+
+FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
 # Initialize environment variables
 env = environ.Env(
     # Set default values

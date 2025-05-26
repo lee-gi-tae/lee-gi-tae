@@ -6,6 +6,7 @@ export default {
       register: '회원가입',
       search: '검색',
       darkMode: '다크 모드',
+      lightMode: '라이트 모드',
       language: '언어',
       close: '닫기',
       dontShowToday: '오늘 하루 보지 않기',
@@ -27,27 +28,7 @@ export default {
         networkError: '네트워크 오류가 발생했습니다.',
       },
       retry: '다시 시도',
-      currentPrice: '현재가',
-      change: '등락률',
-      sevenDayTrend: '7일 추세',
-      searchStock: '주식 검색',
-      relatedVideos: '관련 유튜브 영상',
-      marketSummary: '시장 요약',
-      stockDetails: '주식 상세',
-      companyName: '회사명',
-      symbol: '심볼',
-      per: 'PER',
-      roe: 'ROE',
-      pbr: 'PBR',
-      stockSplits: '주식 분할 일정',
-      splitDate: '분할 예정일',
-      splitRatio: '분할 비율',
-      viewDetails: '상세 보기',
-      lightMode: '라이트 모드',
-    },
-    home: {
-      marketOverviewTitle: '주요 시장 현황',
-      marketOverviewSubtitle: '실시간 KOSPI 및 NASDAQ 지수를 확인하세요.'
+      lightMode: 'Light Mode',
     },
     settings: {
       title: '설정',
@@ -79,8 +60,11 @@ export default {
       map: '지점/ATM',
       videos: '금융 영상',
       admin: '관리자',
-      stockDashboard: '주식 대시보드',
-      stockSplits: '주식 분할 정보',
+      stockSearchPlaceholder: '주식 검색 (예: AAPL)',
+      stockSearching: '검색 중...',
+      stockSearchError: '오류: ',
+      noStockResultsFound: '다음에 대한 검색 결과가 없습니다:',
+      stockSearchFailed: '검색에 실패했습니다. 다시 시도해주세요.'
     },
     hero: {
       tagline: '당신의 금융, 당신의 방식으로',
@@ -177,6 +161,17 @@ export default {
       errorRemoveVideo: '영상 제거에 실패했습니다. 다시 시도해주세요.',
       watch: '시청하기',
       remove: '제거하기'
+    },
+    stocks: {
+      historyTitle: "주식 변동 내역",
+      showingDataFor: "표시중인 데이터:",
+      dataPoints: "데이터 포인트 수",
+      tableDate: "날짜",
+      tablePrice: "가격",
+      noHistoryData: "{symbol}에 대한 과거 데이터가 없습니다.",
+      fetchError: "주가 정보를 가져오는데 실패했습니다.",
+      fetchErrorGeneric: "API 요청 실패: {status}",
+      error404: "'{symbol}' 종목을 찾을 수 없거나 데이터가 없습니다."
     }
   },
   en: {
@@ -186,6 +181,7 @@ export default {
       register: 'Register',
       search: 'Search',
       darkMode: 'Dark Mode',
+      lightMode: 'Light Mode',
       language: 'Language',
       close: 'Close',
       dontShowToday: "Don't show today",
@@ -207,27 +203,6 @@ export default {
         networkError: 'A network error occurred.',
       },
       retry: 'Retry',
-      currentPrice: 'Current Price',
-      change: 'Change',
-      sevenDayTrend: '7-Day Trend',
-      searchStock: 'Search Stock',
-      relatedVideos: 'Related YouTube Videos',
-      marketSummary: 'Market Summary',
-      stockDetails: 'Stock Details',
-      companyName: 'Company Name',
-      symbol: 'Symbol',
-      per: 'PER',
-      roe: 'ROE',
-      pbr: 'PBR',
-      stockSplits: 'Stock Splits Schedule',
-      splitDate: 'Split Date',
-      splitRatio: 'Split Ratio',
-      viewDetails: 'View Details',
-      lightMode: 'Light Mode',
-    },
-    home: {
-      marketOverviewTitle: 'Key Market Overview',
-      marketOverviewSubtitle: 'Check real-time KOSPI and NASDAQ indices.'
     },
     settings: {
       title: 'Settings',
@@ -260,8 +235,11 @@ export default {
       map: 'Branches/ATM',
       videos: 'Financial Videos',
       admin: 'Admin',
-      stockDashboard: 'Stock Dashboard',
-      stockSplits: 'Stock Split Info',
+      stockSearchPlaceholder: 'Stock Search (e.g. AAPL)',
+      stockSearching: 'Searching...',
+      stockSearchError: 'Error: ',
+      noStockResultsFound: 'No results found for',
+      stockSearchFailed: 'Search failed. Please try again.'
     },
     hero: {
       tagline: 'Your Finance, Your Way',
@@ -356,6 +334,17 @@ export default {
       errorRemoveVideo: 'Failed to remove video. Please try again.',
       watch: 'Watch Video',
       remove: 'Remove Video'
+    },
+    stocks: {
+      historyTitle: "Stock History",
+      showingDataFor: "Showing data for:",
+      dataPoints: "Data points:",
+      tableDate: "Date",
+      tablePrice: "Price",
+      noHistoryData: "No history data available for {symbol}.",
+      fetchError: "Failed to fetch stock history.",
+      fetchErrorGeneric: "API request failed: {status}",
+      error404: "Stock symbol '{symbol}' not found or no data available."
     }
   },
 }

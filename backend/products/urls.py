@@ -84,4 +84,15 @@ urlpatterns = [
         views.update_credit_loan_products,
         name="update-credit-loan-products",
     ),
+    # Stock API endpoints
+    path(
+        "stocks/search/",
+        views.StockSearchAPIView.as_view(),
+        name="stock-search",
+    ),
+    path(
+        "stocks/history/<str:symbol>/",
+        views.StockHistoryAPIView.as_view(),
+        name="stock-history",
+    ),
 ]

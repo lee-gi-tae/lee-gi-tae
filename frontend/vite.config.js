@@ -12,4 +12,24 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    proxy: {
+      '/products': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/accounts': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/articles': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/youtube': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      }
+    }
+  }
 })

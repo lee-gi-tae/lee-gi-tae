@@ -4,6 +4,11 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django.conf import settings
+import os
+import time
+import requests
+from rest_framework.views import APIView
+from datetime import datetime, timedelta
 
 from .utils import (
     update_all_financial_products,
@@ -260,7 +265,20 @@ def get_user_favorites(request):
     """
     Get a user's favorite financial products
     """
-    favorites = UserProduct.objects.filter(user=request.user).select_related("product")
+    favorites = (
+        UserProduct.objects.filter(user=request.user)
+        .select_related(
+            "product",
+            "product__deposit_product",
+            "product__saving_product",
+            "product__loan_product",
+        )
+        .prefetch_related(
+            "product__mortgage_options",
+            "product__credit_options",
+            "product__requirement_options",
+        )
+    )
     serializer = UserProductSerializer(favorites, many=True)
     return Response(serializer.data)
 
@@ -772,7 +790,7 @@ def get_exchange_rate(request):
             "searchdate": day,
             "data": "AP01",
         },
-        verify=False
+        verify=False,
     )
 
     if response.status_code != 200:
@@ -1175,3 +1193,215 @@ def get_ai_recommendations_page(request):
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+# Finnhub API Key
+API_KEY = os.getenv("FINNHUB_API_KEY")
+BASE_URL = "https://finnhub.io/api/v1"
+
+class StockSearchAPIView(APIView):
+    """
+    Finnhub API를 사용하여 주식 정보를 검색합니다.
+    쿼리 파라미터 'q'를 통해 검색어를 받습니다.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        if not API_KEY:
+            return Response(
+                {"error": "Finnhub API 키가 설정되지 않았습니다."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        query = request.GET.get("q", "").upper()
+        if not query:
+            return Response(
+                {"error": "검색어('q')를 입력해주세요."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            response = requests.get(
+                f"{BASE_URL}/stock/symbol",
+                params={"exchange": "US", "token": API_KEY},
+                timeout=10, 
+            )
+            response.raise_for_status()
+            items = response.json()
+
+        except requests.exceptions.Timeout:
+            return Response(
+                {"error": "Finnhub API 요청 시간 초과"},
+                status=status.HTTP_504_GATEWAY_TIMEOUT,
+            )
+        except requests.exceptions.HTTPError as e:
+            error_detail = f"Finnhub API 오류: {e.response.status_code}"
+            try: # Attempt to get more specific error from Finnhub
+                error_content = e.response.json()
+                if isinstance(error_content, dict) and "error" in error_content:
+                     error_detail += f" - {error_content['error']}"
+                else:
+                    error_detail += f" - {e.response.text[:100]}"
+            except ValueError:
+                 error_detail += f" - {e.response.text[:100]}"
+            return Response(
+                {"error": error_detail},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        except requests.exceptions.RequestException as e:
+            return Response(
+                {"error": f"Finnhub API 요청 중 오류 발생: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except ValueError: 
+            return Response(
+                {"error": "Finnhub API 응답을 파싱할 수 없습니다."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        if not isinstance(items, list):
+            error_message = items.get("error", "알 수 없는 API 응답 형식입니다.") if isinstance(items, dict) else "알 수 없는 API 응답 형식입니다."
+            return Response(
+                {"error": f"Finnhub API로부터 유효한 주식 목록을 받지 못했습니다: {error_message}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        matches = [
+            item
+            for item in items
+            if isinstance(item, dict) and (
+                query in item.get("symbol", "").upper()
+                or query in item.get("description", "").upper()
+            )
+        ]
+        
+        results = [
+            {"symbol": match.get("symbol"), "description": match.get("description")}
+            for match in matches
+            if match.get("symbol") 
+        ]
+        return Response(results)
+
+
+class StockHistoryAPIView(APIView):
+    """
+    Finnhub API를 사용하여 특정 주식의 과거 데이터를 조회합니다.
+    URL 경로에서 'symbol'을 받습니다.
+    무료 플랜을 고려하여 resolution은 'D'(일간)로 고정하고,
+    조회 기간은 현재부터 약 3개월 전까지로 기본 설정합니다.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, symbol):
+        api_key = os.getenv("FINNHUB_API_KEY")
+        base_url = "https://finnhub.io/api/v1"
+
+        if not api_key:
+            logger.error("FINNHUB_API_KEY is not set in environment variables.")
+            return Response(
+                {"error": "API key for Finnhub is not configured."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # 현재 시간을 기준으로 to 설정 (오늘 자정)
+        # Finnhub는 UTC 기준으로 동작하므로, datetime.now()를 사용해도 무방.
+        # 만약 서버 시간이 정확하지 않다면 문제가 될 수 있으나, 우선 API가 요구하는 형태로 전송.
+        to_datetime = datetime.now()
+        to_timestamp = int(to_datetime.timestamp())
+
+        # from은 약 3개월 전으로 설정
+        from_datetime = to_datetime - timedelta(days=90)
+        from_timestamp = int(from_datetime.timestamp())
+        
+        # resolution은 'D' (일간)로 고정
+        resolution = 'D'
+
+        # Django 서버의 현재 시간을 로그로 남겨 확인 (디버깅용)
+        # 실제 운영 환경에서는 제거하거나 로깅 레벨 조정 필요
+        current_server_time = time.time()
+        current_server_datetime = datetime.now()
+        logger.info(f"StockHistoryAPIView - Symbol: {symbol}")
+        logger.info(f"StockHistoryAPIView - API_KEY_USED (partial): {api_key[:5]}...")
+        logger.info(f"StockHistoryAPIView - Requesting Finnhub with: symbol={symbol}, resolution={resolution}, from_timestamp={from_timestamp}, to_timestamp={to_timestamp}")
+        logger.info(f"StockHistoryAPIView - Current server time (time.time()): {current_server_time} ({datetime.fromtimestamp(current_server_time)})")
+        logger.info(f"StockHistoryAPIView - Current server datetime (datetime.now()): {current_server_datetime}")
+
+
+        url = f"{base_url}/stock/candle?symbol={symbol}&resolution={resolution}&from={from_timestamp}&to={to_timestamp}&token={api_key}"
+        
+        try:
+            response = requests.get(url, timeout=10)  # 10초 타임아웃 설정
+            response.raise_for_status()  # 200 OK가 아니면 HTTPError 발생
+            
+            # Finnhub API는 가끔 빈 응답 ('')이나 비정상적인 JSON ('OK')을 성공(200)으로 반환할 때가 있음
+            # 실제 데이터가 있는지 확인
+            if not response.text or response.text == 'OK':
+                 logger.warning(f"Finnhub API returned an empty or invalid success response for symbol {symbol}. Response: {response.text}")
+                 return Response({"error": f"Finnhub API returned no data or an invalid response for symbol {symbol}."}, status=status.HTTP_502_BAD_GATEWAY)
+
+            data = response.json()
+
+            # Finnhub API 응답에 's' (status) 필드가 있는지 확인
+            if data.get("s") == "no_data":
+                logger.info(f"Finnhub API returned 'no_data' for symbol {symbol}.")
+                # 데이터가 없는 경우 빈 리스트 또는 적절한 메시지 반환
+                return Response({"c": [], "h": [], "l": [], "o": [], "t": [], "v": [], "message": "No data available for the selected period."}, status=status.HTTP_200_OK)
+            elif data.get("s") != "ok":
+                # 's' 필드가 'ok'가 아닌 다른 오류 값을 가질 경우
+                logger.error(f"Finnhub API returned status '{data.get('s')}' for symbol {symbol}. Full response: {data}")
+                return Response(
+                    {"error": f"Finnhub API indicated an issue: {data.get('s')}"},
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
+            
+            # 데이터가 정상적으로 있는 경우 ('s' == 'ok' 이고, 'c', 'h', 'l', 'o', 't', 'v' 필드들이 존재)
+            # 필수 필드들이 모두 리스트 형태인지, 길이가 같은지 기본적인 검증을 추가할 수 있음
+            # 예: if not all(isinstance(data.get(k), list) for k in ['c', 'h', 'l', 'o', 't', 'v']):
+            #       logger.error("Finnhub API response format is invalid.")
+            #       return Response({"error": "Invalid data format from Finnhub API."}, status=status.HTTP_502_BAD_GATEWAY)
+
+            return Response(data)
+
+        except requests.exceptions.HTTPError as e:
+            # Finnhub API가 4xx 또는 5xx 응답을 반환한 경우
+            error_message = f"Finnhub API request failed for symbol {symbol} with status {e.response.status_code}."
+            try:
+                error_content = e.response.json()
+                logger.error(f"{error_message} Response: {error_content}")
+                # Finnhub의 에러 메시지를 클라이언트에게 전달할지 결정 (보안 고려)
+                # 여기서는 Finnhub이 반환하는 error 필드가 있다면 그것을 사용
+                detail_error = error_content.get('error', 'See server logs for details.')
+            except ValueError: # 응답이 JSON이 아닐 경우
+                error_content_text = e.response.text
+                logger.error(f"{error_message} Response: {error_content_text}")
+                detail_error = 'Finnhub API returned a non-JSON error. See server logs for details.'
+
+            # Finnhub의 403 에러는 API 키 관련 문제일 가능성이 높음
+            if e.response.status_code == 403:
+                 logger.error("Finnhub API returned 403 Forbidden. This might be due to an invalid API key, insufficient permissions for the requested data (e.g., non-daily data on free plan), or incorrect timestamp (especially if PC time is off).")
+                 detail_error = "Access to Finnhub resource is forbidden. Check API key, plan limits (free plan often supports daily data only), or system time."
+
+            return Response(
+                {"error": "Failed to fetch stock history from Finnhub.", "details": detail_error},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        except requests.exceptions.RequestException as e:
+            # 네트워크 문제, 타임아웃 등
+            logger.error(f"Error connecting to Finnhub API for symbol {symbol}: {e}")
+            return Response(
+                {"error": "Could not connect to Finnhub API.", "details": str(e)},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except ValueError as e: # JSON 디코딩 오류
+            logger.error(f"Error decoding JSON response from Finnhub API for symbol {symbol}: {e}. Response text: {response.text if 'response' in locals() else 'N/A'}")
+            return Response(
+                {"error": "Invalid JSON response from Finnhub API."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        except Exception as e:
+            # 기타 예외 처리
+            logger.exception(f"An unexpected error occurred in StockHistoryAPIView for symbol {symbol}: {e}") # .exception()은 스택 트레이스 포함
+            return Response(
+                {"error": "An unexpected error occurred while fetching stock history."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

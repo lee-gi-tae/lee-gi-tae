@@ -12,9 +12,38 @@
           <router-link to="/articles" class="nav-link">{{ $t('header.community') }}</router-link>
           <router-link to="/map" class="nav-link">{{ $t('header.map') }}</router-link>
           <router-link to="/youtube/search" class="nav-link">{{ $t('header.videos') }}</router-link>
-          <router-link to="/dashboard" class="nav-link">{{ $t('header.stockDashboard') || '주식 대시보드' }}</router-link>
-          <router-link to="/split-info" class="nav-link">{{ $t('header.stockSplits') || '주식 분할' }}</router-link>
         </nav>
+
+        <!-- Stock Search START-->
+        <div class="stock-search-container" ref="stockSearchDropdownContainer">
+          <input 
+            type="text" 
+            v-model="stockSearchQuery" 
+            @input="debouncedSearchStock" 
+            @focus="stockSearchFocused = true"
+            :placeholder="$t('header.stockSearchPlaceholder', 'Stock Search (e.g. AAPL)')" 
+            class="stock-search-input"
+          />
+          <button @click="searchStock" class="stock-search-button" :disabled="stockSearchLoading">
+            <i v-if="!stockSearchLoading" class="bi bi-search"></i>
+            <div v-if="stockSearchLoading" class="mini-loader"></div>
+          </button>
+          <div v-if="stockSearchFocused && (stockSearchResults.length > 0 || stockSearchLoading || stockSearchError || (stockSearchQuery && !stockSearchLoading && stockSearchResults.length === 0))" class="stock-search-results-dropdown">
+            <div v-if="stockSearchLoading" class="search-loading-message">{{ $t('header.stockSearching', 'Searching...') }}</div>
+            <div v-else-if="stockSearchError" class="search-error-message">
+              {{ $t('header.stockSearchError', 'Error: ') }} {{ stockSearchError }}
+            </div>
+            <ul v-else-if="stockSearchResults.length > 0">
+              <li v-for="stock in stockSearchResults" :key="stock.symbol" @click="goToStockDetail(stock.symbol)" class="search-result-item">
+                <strong>{{ stock.symbol }}</strong> - <span>{{ stock.description }}</span>
+              </li>
+            </ul>
+            <div v-else-if="stockSearchQuery && !stockSearchLoading && stockSearchResults.length === 0 && !stockSearchError" class="no-results-message">
+              {{ $t('header.noStockResultsFound', 'No results found for') }} "{{ stockSearchQuery }}"
+            </div>
+          </div>
+        </div>
+        <!-- Stock Search END -->
 
         <div class="user-menu">
           <template v-if="isLoggedIn">
@@ -103,13 +132,15 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useSettingsStore } from '@/stores/settings'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 // Components
 import PhishingModal from '@/components/modals/PhishingModal.vue'
 // import ParticleNetwork from '@/components/effects/ParticleNetwork.vue' // 주석 처리
 
 const userStore = useUserStore()
 const settingsStore = useSettingsStore()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
+const router = useRouter()
 
 const isLoggedIn = computed(() => userStore.isLoggedIn)
 const isAdmin = computed(() => userStore.isAdmin)
@@ -121,6 +152,16 @@ const currentLocale = computed(() => locale.value)
 
 const dropdownOpen = ref(false)
 const dropdown = ref(null)
+
+// Stock Search Data
+const stockSearchQuery = ref('')
+const stockSearchResults = ref([])
+const stockSearchLoading = ref(false)
+const stockSearchError = ref(null)
+const stockSearchFocused = ref(false)
+const stockSearchDropdownContainer = ref(null)
+
+let stockSearchDebounceTimer = null
 
 // Determine if header/footer should be shown based on route
 const showHeader = computed(() => {
@@ -170,12 +211,69 @@ onMounted(() => {
 
   // Add event listener for closing dropdown
   document.addEventListener('click', closeDropdown)
+  document.addEventListener('click', handleClickOutsideStockSearch)
 })
 
 onBeforeUnmount(() => {
   // Remove event listener
   document.removeEventListener('click', closeDropdown)
+  document.removeEventListener('click', handleClickOutsideStockSearch)
 })
+
+// Stock Search Methods
+const searchStock = async () => {
+  if (!stockSearchQuery.value.trim()) {
+    stockSearchResults.value = []
+    stockSearchError.value = null
+    return
+  }
+  stockSearchLoading.value = true
+  stockSearchError.value = null
+  stockSearchResults.value = []
+
+  try {
+    const response = await fetch(`/products/stocks/search/?q=${encodeURIComponent(stockSearchQuery.value.trim())}`)
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.error || `API request failed with status ${response.status}`)
+    }
+    const data = await response.json()
+    stockSearchResults.value = data
+  } catch (error) {
+    console.error('Stock search error:', error)
+    stockSearchError.value = error.message || t('header.stockSearchFailed', 'Search failed. Please try again.')
+  } finally {
+    stockSearchLoading.value = false
+  }
+}
+
+const debouncedSearchStock = () => {
+  clearTimeout(stockSearchDebounceTimer)
+  if (stockSearchQuery.value.trim()) {
+    stockSearchDebounceTimer = setTimeout(() => {
+      searchStock()
+    }, 500)
+  } else {
+    stockSearchResults.value = []
+    stockSearchError.value = null
+  }
+}
+
+const goToStockDetail = (symbol) => {
+  // Navigate to the StockDetail route
+  router.push({ name: 'StockDetail', params: { symbol: symbol } });
+  
+  // Clear search input and results, and hide dropdown
+  stockSearchQuery.value = ''
+  stockSearchResults.value = []
+  stockSearchFocused.value = false // Hide dropdown after selection
+}
+
+const handleClickOutsideStockSearch = (event) => {
+  if (stockSearchDropdownContainer.value && !stockSearchDropdownContainer.value.contains(event.target)) {
+    stockSearchFocused.value = false
+  }
+}
 </script>
 
 <style>
@@ -252,8 +350,9 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1300px;
+  max-width: var(--max-width);
   margin: 0 auto;
+  gap: 1rem;
 }
 
 .logo {
@@ -540,5 +639,135 @@ main {
 .auth-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Stock Search Styles START */
+.stock-search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 1rem;
+}
+
+.stock-search-input {
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius) 0 0 var(--border-radius);
+  font-size: 0.9rem;
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  width: 200px;
+  transition: border-color var(--transition-speed), background-color var(--transition-speed);
+}
+
+.stock-search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-color-translucent);
+}
+
+.stock-search-button {
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--primary-color);
+  background-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  margin-left: -1px;
+  transition: background-color var(--transition-speed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(0.5rem * 2 + 0.9rem * 1.6 + 2px);
+}
+
+.stock-search-button:hover {
+  background-color: var(--primary-color-dark);
+}
+
+.stock-search-button:disabled {
+  background-color: var(--button-disabled-bg);
+  cursor: not-allowed;
+}
+
+.stock-search-button .mini-loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.stock-search-results-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  box-shadow: 0 4px 8px var(--shadow-color-light);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 0.5rem 0;
+}
+
+.stock-search-results-dropdown .search-loading-message,
+.stock-search-results-dropdown .search-error-message,
+.stock-search-results-dropdown .no-results-message {
+  padding: 0.8rem 1rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.stock-search-results-dropdown .search-error-message {
+  color: var(--error-color);
+}
+
+.stock-search-results-dropdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.stock-search-results-dropdown .search-result-item {
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  transition: background-color var(--transition-speed);
+  border-bottom: 1px solid var(--border-color-light);
+}
+.stock-search-results-dropdown .search-result-item:last-child {
+  border-bottom: none;
+}
+
+.stock-search-results-dropdown .search-result-item:hover {
+  background-color: var(--background-tertiary);
+}
+
+.stock-search-results-dropdown .search-result-item strong {
+  color: var(--text-primary);
+}
+.stock-search-results-dropdown .search-result-item span {
+  color: var(--text-secondary);
+  font-size: 0.9em;
+}
+
+/* Ensure dropdown visibility */
+.stock-search-container:focus-within .stock-search-results-dropdown,
+.stock-search-input:focus + .stock-search-results-dropdown {
+  /* display: block; */
+}
+
+/* Stock Search Styles END */
+
+.user-menu {
+  position: relative;
 }
 </style>
