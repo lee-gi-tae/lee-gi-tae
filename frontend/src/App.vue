@@ -12,6 +12,8 @@
           <router-link to="/articles" class="nav-link">{{ $t('header.community') }}</router-link>
           <router-link to="/map" class="nav-link">{{ $t('header.map') }}</router-link>
           <router-link to="/youtube/search" class="nav-link">{{ $t('header.videos') }}</router-link>
+          <router-link to="/dashboard" class="nav-link">{{ $t('header.stockDashboard') || '주식 대시보드' }}</router-link>
+          <router-link to="/split-info" class="nav-link">{{ $t('header.stockSplits') || '주식 분할' }}</router-link>
         </nav>
 
         <div class="user-menu">

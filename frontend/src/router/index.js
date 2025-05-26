@@ -172,6 +172,18 @@ const routes = [
     meta: { requiresAdmin: true },
   },
   {
+    path: '/dashboard',
+    name: 'StockDashboard',
+    component: () => import('@/views/StockDashboard.vue'),
+    meta: { requiresAuth: false }, // Example: No auth needed for now
+  },
+  {
+    path: '/split-info',
+    name: 'StockSplitInfo',
+    component: () => import('@/views/StockSplitInfo.vue'),
+    meta: { requiresAuth: false },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFoundView.vue'),
