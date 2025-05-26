@@ -24,10 +24,12 @@ env = environ.Env(
     KAKAO_CLIENT_ID=(str, ""),
     FINANCIAL_API_KEY=(str, ""),
     YOUTUBE_API_KEY=(str, ""),
+    OPENAI_API_KEY=(str, ""),
+    EXCHANGE_RATE_API=(str, ""),
 )
 
 # Read .env file if it exists
-environ.Env.read_env(os.path.join(Path(__file__).resolve().parent, ".env"))
+environ.Env.read_env(os.path.join(Path(__file__).resolve().parent.parent, ".env"))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -89,6 +91,9 @@ REST_FRAMEWORK = {
 
 # Financial API Key for product data
 FINANCIAL_API_KEY = env("DEPOSIT_PRODUCT_API", default="")
+
+# Exchange Rate API Key
+EXCHANGE_RATE_API = env("EXCHANGE_RATE_API", default="")
 
 # YouTube API Key
 YOUTUBE_API_KEY = env("YOUTUBE_API", default="")
@@ -263,6 +268,8 @@ KAKAO_CLIENT_ID = env("KAKAO_CLIENT_ID")
 KAKAO_REDIRECT_URI = "http://localhost:4000/login/kakao/callback"
 
 FINANCE_API = env("FINANCE_API")
-EXCHANGE_RATE_API = env("EXCHANGE_RATE_API")
 DEPOSIT_PRODUCT_API = env("DEPOSIT_PRODUCT_API")
 DEPOSIT_NEWS_API = env("DEPOSIT_NEWS_API")
+
+# OpenAI API Key for AI product recommendations
+OPENAI_API_KEY = env("OPENAI_API_KEY", default="")

@@ -6,47 +6,53 @@
       <form @submit.prevent="handleLogin">
         <div class="form-group">
           <label for="username">아이디 또는 이메일</label>
-          <input 
-            type="text" 
-            id="username" 
-            v-model="loginForm.username" 
+          <input
+            type="text"
+            id="username"
+            v-model="loginForm.username"
             placeholder="아이디 또는 이메일 주소"
             required
           />
         </div>
-        
+
         <div class="form-group">
           <label for="password">비밀번호</label>
-          <input 
-            type="password" 
-            id="password" 
-            v-model="loginForm.password" 
+          <input
+            type="password"
+            id="password"
+            v-model="loginForm.password"
             placeholder="비밀번호"
             required
           />
         </div>
 
         <p v-if="error" class="error-message">{{ error }}</p>
-        
+
         <button type="submit" class="login-btn" :disabled="loading">
           {{ loading ? '로그인 중...' : '로그인' }}
         </button>
       </form>
-      
+
       <div class="social-login">
         <p>소셜 계정으로 로그인</p>
         <div class="social-buttons">
           <button @click="googleLogin" class="google-btn">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png"
+              alt="Google"
+            />
             Google로 로그인
           </button>
           <button @click="kakaoLogin" class="kakao-btn">
-            <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png" alt="Kakao">
+            <img
+              src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png"
+              alt="Kakao"
+            />
             Kakao로 로그인
           </button>
         </div>
       </div>
-      
+
       <div class="register-link">
         계정이 없으신가요? <router-link to="/register">회원가입</router-link>
       </div>
@@ -65,7 +71,7 @@ const router = useRouter()
 
 const loginForm = reactive({
   username: '',
-  password: ''
+  password: '',
 })
 
 const loading = ref(false)
@@ -74,10 +80,10 @@ const error = ref(null)
 const handleLogin = async () => {
   error.value = null
   loading.value = true
-  
+
   try {
     await userStore.login(loginForm.username, loginForm.password)
-    
+
     // Redirect to the page the user was trying to access, or to home
     const redirectPath = route.query.redirect || '/'
     router.push(redirectPath)
@@ -93,9 +99,9 @@ const googleLogin = () => {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
   const redirectUri = `${window.location.origin}/login/google/callback`
   const scope = 'email profile'
-  
+
   const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}`
-  
+
   window.location.href = googleAuthUrl
 }
 
@@ -103,9 +109,9 @@ const kakaoLogin = () => {
   // Kakao OAuth URL
   const kakaoClientId = import.meta.env.VITE_KAKAO_CLIENT_ID
   const redirectUri = `${window.location.origin}/login/kakao/callback`
-  
+
   const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${kakaoClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
-  
+
   window.location.href = kakaoAuthUrl
 }
 </script>
@@ -116,80 +122,119 @@ const kakaoLogin = () => {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f5f5f5;
-  padding: 20px;
+  background-color: var(--background-primary); /* Themed background */
+  padding: 2rem; /* Consistent padding */
+  font-family: var(--font-family-base);
 }
 
 .login-card {
   width: 100%;
-  max-width: 420px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 30px;
+  max-width: 450px; /* Slightly wider for better spacing */
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius-lg); /* Consistent border radius */
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
+  padding: 2.5rem; /* Increased padding */
 }
 
-h2 {
+.login-card h2 {
   text-align: center;
-  margin-bottom: 24px;
-  color: #333;
+  margin-bottom: 2rem; /* Increased margin */
+  color: var(--text-primary);
+  font-family: 'Playfair Display', serif; /* Title font */
+  font-size: 2rem; /* Adjusted size */
+  font-weight: 700;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem; /* Consistent margin */
 }
 
-label {
+.form-group label {
   display: block;
-  margin-bottom: 6px;
-  font-size: 14px;
-  color: #555;
+  margin-bottom: 0.6rem; /* Adjusted margin */
+  font-size: 0.9rem; /* Adjusted size */
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
-input {
+.form-group input {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
+  padding: 0.8rem 1rem; /* Adjusted padding */
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  transition:
+    border-color var(--transition-speed),
+    box-shadow var(--transition-speed);
 }
 
-.login-btn {
-  width: 100%;
-  padding: 12px;
-  background-color: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.2s;
+.form-group input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
 }
 
-.login-btn:hover {
-  background-color: #4338ca;
-}
-
-.login-btn:disabled {
-  background-color: #a5a5a5;
-  cursor: not-allowed;
+.form-group input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb, 163, 184, 153), 0.2);
 }
 
 .error-message {
-  color: #e53e3e;
-  font-size: 14px;
-  margin-bottom: 16px;
+  color: #ef4444; /* Consistent error color */
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 0.8rem 1rem;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Using global .action-btn styles where appropriate */
+.login-btn,
+.social-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1.5rem;
+  border-radius: var(--border-radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  font-size: 1rem;
+  border: 1px solid transparent;
+}
+
+.login-btn {
+  background-color: var(--accent-color);
+  color: var(--button-text);
+  border-color: var(--accent-color);
+}
+
+.login-btn:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.login-btn:disabled {
+  background-color: var(--accent-color);
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .social-login {
-  margin-top: 24px;
+  margin-top: 2rem;
   text-align: center;
 }
 
 .social-login p {
-  margin-bottom: 12px;
-  color: #666;
-  font-size: 14px;
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
 .social-buttons {
@@ -198,7 +243,25 @@ input {
   justify-content: center;
 }
 
-.google-btn, .kakao-btn {
+.social-btn {
+  gap: 0.8rem;
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.social-btn:hover {
+  border-color: var(--accent-color);
+  background-color: var(--card-bg); /* Slightly different hover for distinctiveness */
+}
+
+.social-btn img {
+  height: 20px;
+  width: 20px;
+}
+
+.google-btn,
+.kakao-btn {
   flex: 1;
   display: flex;
   align-items: center;
@@ -218,33 +281,45 @@ input {
 }
 
 .kakao-btn {
-  background-color: #FEE500;
+  background-color: #fee500;
   color: #000000;
-  border-color: #FEE500;
+  border-color: #fee500;
 }
 
 .kakao-btn:hover {
-  background-color: #FDD800;
+  background-color: #fdd800;
 }
 
-.google-btn img, .kakao-btn img {
+.google-btn img,
+.kakao-btn img {
   height: 20px;
   width: 20px;
 }
 
 .register-link {
-  margin-top: 20px;
+  margin-top: 2rem;
   text-align: center;
-  font-size: 14px;
-  color: #666;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 .register-link a {
-  color: #4f46e5;
+  color: var(--accent-color);
   text-decoration: none;
+  font-weight: 500;
 }
 
 .register-link a:hover {
   text-decoration: underline;
+  color: var(--accent-hover);
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 2rem 1.5rem;
+  }
+  .login-card h2 {
+    font-size: 1.8rem;
+  }
 }
 </style>
