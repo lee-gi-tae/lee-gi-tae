@@ -6,7 +6,6 @@ export default {
       register: '회원가입',
       search: '검색',
       darkMode: '다크 모드',
-      lightMode: '라이트 모드',
       language: '언어',
       close: '닫기',
       dontShowToday: '오늘 하루 보지 않기',
@@ -28,7 +27,6 @@ export default {
         networkError: '네트워크 오류가 발생했습니다.',
       },
       retry: '다시 시도',
-      lightMode: 'Light Mode',
     },
     settings: {
       title: '설정',
@@ -60,11 +58,6 @@ export default {
       map: '지점/ATM',
       videos: '금융 영상',
       admin: '관리자',
-      stockSearchPlaceholder: '주식 검색 (예: AAPL)',
-      stockSearching: '검색 중...',
-      stockSearchError: '오류: ',
-      noStockResultsFound: '다음에 대한 검색 결과가 없습니다:',
-      stockSearchFailed: '검색에 실패했습니다. 다시 시도해주세요.'
     },
     hero: {
       tagline: '당신의 금융, 당신의 방식으로',
@@ -102,6 +95,12 @@ export default {
       loadingData: '데이터를 불러오는 중...',
       errorLoadingData: '데이터를 불러오는 중 오류가 발생했습니다.',
       retry: '다시 시도',
+      kopsi: '코스피 지수',
+      kopsiDesc:
+        '코스피 지수는 한국 증시의 대표적인 주가 지수로, 최근 1개월간의 변동 추이를 보여줍니다.',
+      kosdaq: '코스닥 지수',
+      kosdaqDesc:
+        '코스닥 지수는 한국의 중소기업 중심의 주가 지수로, 최근 1개월간의 변동 추이를 보여줍니다.',
     },
     footer: {
       companyInfo: '회사 정보',
@@ -160,19 +159,8 @@ export default {
       videoRemoved: '영상이 목록에서 제거되었습니다.',
       errorRemoveVideo: '영상 제거에 실패했습니다. 다시 시도해주세요.',
       watch: '시청하기',
-      remove: '제거하기'
+      remove: '제거하기',
     },
-    stocks: {
-      historyTitle: "주식 변동 내역",
-      showingDataFor: "표시중인 데이터:",
-      dataPoints: "데이터 포인트 수",
-      tableDate: "날짜",
-      tablePrice: "가격",
-      noHistoryData: "{symbol}에 대한 과거 데이터가 없습니다.",
-      fetchError: "주가 정보를 가져오는데 실패했습니다.",
-      fetchErrorGeneric: "API 요청 실패: {status}",
-      error404: "'{symbol}' 종목을 찾을 수 없거나 데이터가 없습니다."
-    }
   },
   en: {
     common: {
@@ -181,7 +169,6 @@ export default {
       register: 'Register',
       search: 'Search',
       darkMode: 'Dark Mode',
-      lightMode: 'Light Mode',
       language: 'Language',
       close: 'Close',
       dontShowToday: "Don't show today",
@@ -226,7 +213,6 @@ export default {
     header: {
       home: 'Home',
       financial: 'Financial Services',
-      aiRecommendations: 'AI Recommendations',
       deposit: 'Deposit Products',
       saving: 'Saving Products',
       loan: 'Loan Products',
@@ -235,11 +221,6 @@ export default {
       map: 'Branches/ATM',
       videos: 'Financial Videos',
       admin: 'Admin',
-      stockSearchPlaceholder: 'Stock Search (e.g. AAPL)',
-      stockSearching: 'Searching...',
-      stockSearchError: 'Error: ',
-      noStockResultsFound: 'No results found for',
-      stockSearchFailed: 'Search failed. Please try again.'
     },
     hero: {
       tagline: 'Your Finance, Your Way',
@@ -321,7 +302,8 @@ export default {
       },
     },
     youtube: {
-      noSavedVideos: 'You haven\'t saved any videos yet. Search for financial videos you\'re interested in and save them!',
+      noSavedVideos:
+        "You haven't saved any videos yet. Search for financial videos you're interested in and save them!",
       searchVideosLink: 'Go to Video Search',
       savedAt: 'Saved at',
       addNotesPlaceholder: 'Add your notes about this video here...',
@@ -333,18 +315,7 @@ export default {
       videoRemoved: 'Video removed from the list.',
       errorRemoveVideo: 'Failed to remove video. Please try again.',
       watch: 'Watch Video',
-      remove: 'Remove Video'
+      remove: 'Remove Video',
     },
-    stocks: {
-      historyTitle: "Stock History",
-      showingDataFor: "Showing data for:",
-      dataPoints: "Data points:",
-      tableDate: "Date",
-      tablePrice: "Price",
-      noHistoryData: "No history data available for {symbol}.",
-      fetchError: "Failed to fetch stock history.",
-      fetchErrorGeneric: "API request failed: {status}",
-      error404: "Stock symbol '{symbol}' not found or no data available."
-    }
   },
 }

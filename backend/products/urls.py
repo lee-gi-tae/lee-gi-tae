@@ -59,6 +59,16 @@ urlpatterns = [
         views.get_exchange_rate,
         name="exchange-rate",
     ),
+    path(
+        "kosdaq-stock-market/",
+        views.get_kosdaq_data,
+        name="kosdaq-stock-market-data",
+    ),
+    path(
+        "kospi-stock-market/",
+        views.get_kospi_data,
+        name="kospi-stock-market-data",
+    ),
     # Admin endpoints for updating financial product data
     path("admin/update-all/", views.update_all_products, name="update-all-products"),
     path(
@@ -83,16 +93,5 @@ urlpatterns = [
         "admin/update-credit-loans/",
         views.update_credit_loan_products,
         name="update-credit-loan-products",
-    ),
-    # Stock API endpoints
-    path(
-        "stocks/search/",
-        views.StockSearchAPIView.as_view(),
-        name="stock-search",
-    ),
-    path(
-        "stocks/history/<str:symbol>/",
-        views.StockHistoryAPIView.as_view(),
-        name="stock-history",
     ),
 ]

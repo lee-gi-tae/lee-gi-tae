@@ -13,13 +13,13 @@ import 'vue-toast-notification/dist/theme-sugar.css'
 // Font imports are now handled via Google Fonts in index.html
 
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faHeart as fasHeart, faMoon, faSun, faGlobe, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { faHeart as fasHeart, faMoon, faSun, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { faHeart as farHeart } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 // particles.js는 이제 index.html에서 CDN으로 로드됩니다
 
-library.add(fasHeart, farHeart, faMoon, faSun, faGlobe, faTriangleExclamation)
+library.add(fasHeart, farHeart, faMoon, faSun, faGlobe)
 
 // i18n 인스턴스를 전역에서 접근 가능하도록 설정
 window.i18nInstance = i18n

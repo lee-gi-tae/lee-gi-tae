@@ -14,18 +14,20 @@ const chartCanvas = ref(null)
 const chart = ref(null)
 const settingsStore = useSettingsStore()
 
-// 차트 데이터 (실제 프로젝트에서는 API로 가져오기)
-const getChartData = async (type) => {
-  const response = await productsService.getGoldAndSilverPrices({ type: type })
+// KOSDAQ 차트 데이터
+const getChartData = async () => {
+  const response = await productsService.getKosdaqData()
+
+  console.log(response)
 
   return {
     labels: response.data.map((item) => item.date),
     datasets: [
       {
-        label: '은(KRW/g)',
-        data: response.data.map((item) => item.domesticPrice),
-        borderColor: '#C0C0C0',
-        backgroundColor: 'rgba(192, 192, 192, 0.1)',
+        label: 'KOSDAQ 지수',
+        data: response.data.map((item) => item.close),
+        borderColor: '#4287f5',
+        backgroundColor: 'rgba(66, 135, 245, 0.1)',
         borderWidth: 3,
         tension: 0.3,
         fill: true,
@@ -36,18 +38,16 @@ const getChartData = async (type) => {
 
 const createChart = async () => {
   if (chartCanvas.value) {
-    // 이전 차트 인스턴스 제거
     if (chart.value) {
       chart.value.destroy()
     }
 
     const ctx = chartCanvas.value.getContext('2d')
 
-    // 다크모드에 따른 글자색 설정
     const textColor = settingsStore.isDarkMode ? '#F0ECE6' : '#333333'
     const gridColor = settingsStore.isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
 
-    const data = await getChartData('AG')
+    const data = await getChartData()
 
     chart.value = new Chart(ctx, {
       type: 'line',
@@ -92,12 +92,7 @@ const createChart = async () => {
                   label += ': '
                 }
                 if (context.parsed.y !== null) {
-                  label += new Intl.NumberFormat('ko-KR').format(context.parsed.y)
-                  if (context.datasetIndex === 0) {
-                    label += ' 원/g'
-                  } else {
-                    label += ' 원/g'
-                  }
+                  label += new Intl.NumberFormat('ko-KR').format(context.parsed.y) + ' pt'
                 }
                 return label
               },
@@ -160,7 +155,6 @@ const createChart = async () => {
   }
 }
 
-// 다크모드 변경 감지
 watch(
   () => settingsStore.isDarkMode,
   () => {
@@ -168,15 +162,12 @@ watch(
   },
 )
 
-// 언어 변경 감지
 window.addEventListener('languageChanged', () => {
   createChart()
 })
 
 onMounted(() => {
   createChart()
-
-  // 창 크기 변경 시 차트 리사이징
   window.addEventListener('resize', createChart)
 })
 

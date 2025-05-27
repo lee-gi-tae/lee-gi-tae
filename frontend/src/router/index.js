@@ -142,13 +142,6 @@ const routes = [
     meta: { requiresAuth: false },
   },
   {
-    path: '/stocks/:symbol',
-    name: 'StockDetail',
-    component: () => import('@/views/stocks/StockDetailView.vue'),
-    meta: { requiresAuth: false },
-    props: true,
-  },
-  {
     path: '/admin',
     name: 'Admin',
     component: () => import('@/views/admin/AdminDashboardView.vue'),
